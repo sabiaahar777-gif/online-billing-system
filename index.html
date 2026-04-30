@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Online Billing System</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #eef2f7;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    input {
+      margin: 5px;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin: 5px;
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      color: white;
+    }
+
+    .btn-green { background: #27ae60; }
+    .btn-red { background: #e74c3c; }
+    .btn-blue { background: #3498db; }
+    .btn-orange { background: #f39c12; }
+    .btn-purple { background: #8e44ad; }
+
+    button:hover { opacity: 0.9; }
+
+    .hidden { display: none; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+      background: white;
+    }
+
+    th {
+      background: #34495e;
+      color: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    #invoice {
+      border: 1px dashed black;
+      width: 280px;
+      padding: 10px;
+      font-family: monospace;
+      background: white;
+      margin-top: 20px;
+    }
+
+    #app {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+
+      #invoice, #invoice * {
+        visibility: visible;
+      }
+
+      #invoice {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 280px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Online Billing System</h2>
+<p style="text-align:center; color:#7f8c8d; font-size:15px;">
+  Simple & Smart Invoice Generator for Daily Use
+</p>
+
+<p style="text-align:center; color:#e67e22; font-size:13px;">
+  For learning and personal use only. Not intended for official or legal accounting purposes.
+</p>
+
+<p style="text-align:center; color:#c0392b; font-size:12px;">
+  Note: Data is stored locally in your browser. Clearing browser data may delete all records.
+</p>
+
+<!-- AUTH -->
+<div id="auth">
+  <h3>Register</h3>
+  <input id="regUser" placeholder="Username">
+  <input id="regPass" type="password" placeholder="Password"><br>
+
+  <input id="companyName" placeholder="Company Name">
+  <input id="companyGST" placeholder="GST Number">
+  <input id="companyAddress" placeholder="Address"><br>
+
+  <button class="btn-blue" onclick="register()">Register</button>
+
+  <h3>Login</h3>
+  <input id="logUser" placeholder="Username">
+  <input id="logPass" type="password" placeholder="Password">
+  <button class="btn-green" onclick="login()">Login</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+  <button class="btn-red" onclick="logout()">Logout</button>
+
+  <h3>Bill Generator</h3>
+
+  <input id="customer" placeholder="Customer Name"><br>
+
+  <input id="item" placeholder="Item Name">
+  <input id="qty" type="number" placeholder="Qty">
+  <input id="price" type="number" placeholder="Price"><br>
+
+  <input id="cgst" type="number" placeholder="CGST %">
+  <input id="sgst" type="number" placeholder="SGST %">
+  <input id="igst" type="number" placeholder="IGST %"><br>
+
+  <button class="btn-blue" onclick="addItem()">Add Item</button>
+
+  <table id="itemsTable">
+    <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+  </table>
+
+  <h4 id="total"></h4>
+
+  <button class="btn-green" onclick="saveBill()">Save Bill</button>
+  <button class="btn-orange" onclick="newBill()">New Bill</button>
+  <button class="btn-purple" onclick="printBill()">Print</button>
+  <button class="btn-blue" onclick="viewBills()">View Invoices</button>
+
+  <div id="invoice"></div>
+  <div id="invoiceList"></div>
+
+</div>
+
+<script>
+let items = [];
+let totalAmount = 0;
+
+// AUTO LOGIN
+window.onload = function() {
+  let user = localStorage.getItem("currentUser");
+  if (user) {
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+  }
+};
+
+// REGISTER
+function register() {
+  let user = document.getElementById("regUser").value;
+  let pass = document.getElementById("regPass").value;
+
+  let company = {
+    name: document.getElementById("companyName").value,
+    gst: document.getElementById("companyGST").value,
+    address: document.getElementById("companyAddress").value
+  };
+
+  let data = {
+    password: pass,
+    company: company
+  };
+
+  localStorage.setItem(user, JSON.stringify(data));
+  alert("Registered!");
+}
+
+// LOGIN
+function login() {
+  let user = document.getElementById("logUser").value;
+  let pass = document.getElementById("logPass").value;
+
+  let stored = JSON.parse(localStorage.getItem(user));
+
+  if (stored && stored.password === pass) {
+    localStorage.setItem("currentUser", user);
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+  } else {
+    alert("Wrong login");
+  }
+}
+
+// LOGOUT
+function logout() {
+  localStorage.removeItem("currentUser");
+  location.reload();
+}
+
+// ADD ITEM
+function addItem() {
+  let item = document.getElementById("item").value;
+  let qty = Number(document.getElementById("qty").value);
+  let price = Number(document.getElementById("price").value);
+
+  let total = qty * price;
+
+  items.push({ item, qty, price, total });
+  totalAmount += total;
+
+  let table = document.getElementById("itemsTable");
+  let row = table.insertRow();
+
+  row.insertCell(0).innerText = item;
+  row.insertCell(1).innerText = qty;
+  row.insertCell(2).innerText = price;
+  row.insertCell(3).innerText = total;
+
+  calculateTotal();
+}
+
+// GST CALCULATION
+function calculateTotal() {
+  let cgst = Number(document.getElementById("cgst").value);
+  let sgst = Number(document.getElementById("sgst").value);
+  let igst = Number(document.getElementById("igst").value);
+
+  let tax = totalAmount * (cgst + sgst + igst) / 100;
+  let final = totalAmount + tax;
+
+  document.getElementById("total").innerText =
+    "SubTotal: ₹" + totalAmount + " | GST: ₹" + tax.toFixed(2) + " | Final: ₹" + final.toFixed(2);
+}
+
+// SAVE BILL
+function saveBill() {
+  let customer = document.getElementById("customer").value;
+
+  let cgst = Number(document.getElementById("cgst").value);
+  let sgst = Number(document.getElementById("sgst").value);
+  let igst = Number(document.getElementById("igst").value);
+
+  let tax = totalAmount * (cgst + sgst + igst) / 100;
+  let final = totalAmount + tax;
+
+  let id = "INV-" + Date.now();
+
+  let bill = {
+    id,
+    customer,
+    items,
+    subTotal: totalAmount,
+    tax: tax,
+    final: final,
+    date: new Date().toLocaleString()
+  };
+
+  let user = localStorage.getItem("currentUser");
+
+  let allBills = JSON.parse(localStorage.getItem(user + "_bills")) || [];
+  allBills.push(bill);
+
+  localStorage.setItem(user + "_bills", JSON.stringify(allBills));
+
+  showInvoice(bill);
+  alert("Bill Saved!");
+}
+
+// SHOW INVOICE
+function showInvoice(bill) {
+  let div = document.getElementById("invoice");
+
+  let user = localStorage.getItem("currentUser");
+  let data = JSON.parse(localStorage.getItem(user));
+  let company = data.company;
+
+  let html = `
+    <div style="text-align:center">
+      <h4>${company.name}</h4>
+      <small>${company.address}</small><br>
+      <small>GST: ${company.gst}</small>
+    </div>
+    <hr>
+
+    <p>Inv: ${bill.id}</p>
+    <p>Date: ${bill.date}</p>
+    <p>Cust: ${bill.customer}</p>
+
+    <hr>
+
+    <table style="width:100%; font-size:12px">
+      <tr>
+        <th align="left">Item</th>
+        <th>Qty</th>
+        <th>Amt</th>
+      </tr>
+
+      ${bill.items.map(i => `
+        <tr>
+          <td>${i.item}</td>
+          <td align="center">${i.qty}</td>
+          <td align="right">${i.total}</td>
+        </tr>
+      `).join("")}
+    </table>
+
+    <hr>
+
+    <p>SubTotal: ₹${bill.subTotal}</p>
+    <p>GST: ₹${bill.tax.toFixed(2)}</p>
+
+    <h4 style="text-align:right">Final: ₹${bill.final.toFixed(2)}</h4>
+
+    <p style="text-align:center">Thank You!</p>
+  `;
+
+  div.innerHTML = html;
+}
+
+// VIEW BILLS
+function viewBills() {
+  let user = localStorage.getItem("currentUser");
+  let bills = JSON.parse(localStorage.getItem(user + "_bills")) || [];
+
+  let div = document.getElementById("invoiceList");
+
+  div.innerHTML = "<h3>Invoices</h3>" + bills.map(b => `
+    <p onclick='loadBill("${b.id}")'>
+      ${b.id} - ${b.customer}
+    </p>
+  `).join("");
+}
+
+// LOAD BILL
+function loadBill(id) {
+  let user = localStorage.getItem("currentUser");
+  let bills = JSON.parse(localStorage.getItem(user + "_bills")) || [];
+
+  let bill = bills.find(b => b.id === id);
+  showInvoice(bill);
+}
+
+// NEW BILL
+function newBill() {
+  location.reload();
+}
+
+// PRINT
+function printBill() {
+  window.print();
+}
+</script>
+
+</body>
+</html>
