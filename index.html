@@ -4,31 +4,15 @@
   <title>Online Billing System</title>
 
   <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-      background: #eef2f7;
-    }
+    body { font-family: Arial; padding: 20px; background: #eef2f7; }
+    h2 { text-align: center; color: #2c3e50; }
 
-    h2 {
-      text-align: center;
-      color: #2c3e50;
-    }
-
-    input {
-      margin: 5px;
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
+    input { margin: 5px; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
 
     button {
-      margin: 5px;
-      padding: 8px 12px;
-      border-radius: 5px;
-      border: none;
-      cursor: pointer;
-      color: white;
+      margin: 5px; padding: 8px 12px;
+      border-radius: 5px; border: none;
+      cursor: pointer; color: white;
     }
 
     .btn-green { background: #27ae60; }
@@ -36,8 +20,6 @@
     .btn-blue { background: #3498db; }
     .btn-orange { background: #f39c12; }
     .btn-purple { background: #8e44ad; }
-
-    button:hover { opacity: 0.9; }
 
     .hidden { display: none; }
 
@@ -77,18 +59,8 @@
 
     @media print {
       body * { visibility: hidden; }
-
-      #invoice, #invoice * {
-        visibility: visible;
-      }
-
-      #invoice {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 280px;
-        font-size: 12px;
-      }
+      #invoice, #invoice * { visibility: visible; }
+      #invoice { position: absolute; left: 0; top: 0; width: 280px; font-size: 12px; }
     }
   </style>
 </head>
@@ -96,19 +68,7 @@
 <body>
 
 <h2>Online Billing System</h2>
-<p style="text-align:center; color:#7f8c8d; font-size:15px;">
-  Simple & Smart Invoice Generator for Daily Use
-</p>
 
-<p style="text-align:center; color:#e67e22; font-size:13px;">
-  For learning and personal use only. Not intended for official or legal accounting purposes.
-</p>
-
-<p style="text-align:center; color:#c0392b; font-size:12px;">
-  Note: Data is stored locally in your browser. Clearing browser data may delete all records.
-</p>
-
-<!-- AUTH -->
 <div id="auth">
   <h3>Register</h3>
   <input id="regUser" placeholder="Username">
@@ -126,7 +86,6 @@
   <button class="btn-green" onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
 <div id="app" class="hidden">
 
   <button class="btn-red" onclick="logout()">Logout</button>
@@ -156,6 +115,10 @@
   <button class="btn-purple" onclick="printBill()">Print</button>
   <button class="btn-blue" onclick="viewBills()">View Invoices</button>
 
+  <!-- ✅ Added buttons -->
+  <button class="btn-purple" onclick="printAllBills()">Print Records</button>
+  <button class="btn-green" onclick="exportBills()">Export Records</button>
+
   <div id="invoice"></div>
   <div id="invoiceList"></div>
 
@@ -165,7 +128,6 @@
 let items = [];
 let totalAmount = 0;
 
-// AUTO LOGIN
 window.onload = function() {
   let user = localStorage.getItem("currentUser");
   if (user) {
@@ -174,7 +136,6 @@ window.onload = function() {
   }
 };
 
-// REGISTER
 function register() {
   let user = document.getElementById("regUser").value;
   let pass = document.getElementById("regPass").value;
@@ -185,16 +146,11 @@ function register() {
     address: document.getElementById("companyAddress").value
   };
 
-  let data = {
-    password: pass,
-    company: company
-  };
-
+  let data = { password: pass, company };
   localStorage.setItem(user, JSON.stringify(data));
   alert("Registered!");
 }
 
-// LOGIN
 function login() {
   let user = document.getElementById("logUser").value;
   let pass = document.getElementById("logPass").value;
@@ -203,20 +159,17 @@ function login() {
 
   if (stored && stored.password === pass) {
     localStorage.setItem("currentUser", user);
-    document.getElementById("auth").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
+    location.reload();
   } else {
     alert("Wrong login");
   }
 }
 
-// LOGOUT
 function logout() {
   localStorage.removeItem("currentUser");
   location.reload();
 }
 
-// ADD ITEM
 function addItem() {
   let item = document.getElementById("item").value;
   let qty = Number(document.getElementById("qty").value);
@@ -238,7 +191,6 @@ function addItem() {
   calculateTotal();
 }
 
-// GST CALCULATION
 function calculateTotal() {
   let cgst = Number(document.getElementById("cgst").value);
   let sgst = Number(document.getElementById("sgst").value);
@@ -248,10 +200,11 @@ function calculateTotal() {
   let final = totalAmount + tax;
 
   document.getElementById("total").innerText =
-    "SubTotal: ₹" + totalAmount + " | GST: ₹" + tax.toFixed(2) + " | Final: ₹" + final.toFixed(2);
+    "SubTotal: ₹" + totalAmount +
+    " | GST: ₹" + tax.toFixed(2) +
+    " | Final: ₹" + final.toFixed(2);
 }
 
-// SAVE BILL
 function saveBill() {
   let customer = document.getElementById("customer").value;
 
@@ -269,8 +222,8 @@ function saveBill() {
     customer,
     items,
     subTotal: totalAmount,
-    tax: tax,
-    final: final,
+    tax,
+    final,
     date: new Date().toLocaleString()
   };
 
@@ -285,7 +238,6 @@ function saveBill() {
   alert("Bill Saved!");
 }
 
-// SHOW INVOICE
 function showInvoice(bill) {
   let div = document.getElementById("invoice");
 
@@ -336,7 +288,6 @@ function showInvoice(bill) {
   div.innerHTML = html;
 }
 
-// VIEW BILLS
 function viewBills() {
   let user = localStorage.getItem("currentUser");
   let bills = JSON.parse(localStorage.getItem(user + "_bills")) || [];
@@ -350,7 +301,6 @@ function viewBills() {
   `).join("");
 }
 
-// LOAD BILL
 function loadBill(id) {
   let user = localStorage.getItem("currentUser");
   let bills = JSON.parse(localStorage.getItem(user + "_bills")) || [];
@@ -359,14 +309,66 @@ function loadBill(id) {
   showInvoice(bill);
 }
 
-// NEW BILL
 function newBill() {
   location.reload();
 }
 
-// PRINT
 function printBill() {
   window.print();
+}
+
+// ✅ PRINT ALL RECORDS
+function printAllBills() {
+  let user = localStorage.getItem("currentUser");
+  let bills = JSON.parse(localStorage.getItem(user + "_bills")) || [];
+
+  if (bills.length === 0) {
+    alert("No records to print");
+    return;
+  }
+
+  let win = window.open("", "", "width=800,height=600");
+
+  let html = `
+    <h2>All Invoice Records</h2>
+    <table border="1" style="width:100%; border-collapse:collapse;">
+      <tr>
+        <th>ID</th><th>Customer</th><th>Date</th><th>Total</th>
+      </tr>
+      ${bills.map(b => `
+        <tr>
+          <td>${b.id}</td>
+          <td>${b.customer}</td>
+          <td>${b.date}</td>
+          <td>₹${b.final.toFixed(2)}</td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+
+  win.document.write(html);
+  win.print();
+}
+
+// ✅ EXPORT RECORDS
+function exportBills() {
+  let user = localStorage.getItem("currentUser");
+  let bills = JSON.parse(localStorage.getItem(user + "_bills")) || [];
+
+  if (bills.length === 0) {
+    alert("No records to export");
+    return;
+  }
+
+  let blob = new Blob([JSON.stringify(bills, null, 2)], { type: "application/json" });
+  let url = URL.createObjectURL(blob);
+
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = "billing_records.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
 }
 </script>
 
